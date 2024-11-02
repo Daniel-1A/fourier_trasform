@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesamiento de Imágenes</title>
+</head>
+<body>
+    <h1>Procesamiento de Imágenes</h1>
+    <form action="{% url 'image_processing' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="image">Selecciona una imagen:</label>
+        <input type="file" name="image" id="image" accept="image/*" required>
+        <br>
+        <button type="submit">Detectar Desenfoque</button>
+    </form>
+
+    {% if image_url %}
+        <h2>Imagen Cargada</h2>
+        <img src="{{ image_url }}" alt="Imagen seleccionada" style="max-width: 300px; max-height: 300px; margin-top: 10px;">        
+        
+        <h2>Resultado de la Detección de Desenfoque</h2>
+        <p>Nivel de desenfoque: {{ result.laplacian_var }}</p>
+        <p>{% if result.is_blurry %}La imagen está desenfocada.{% else %}La imagen está nítida.{% endif %}</p>
+    {% endif %}
+</body>
+</html>

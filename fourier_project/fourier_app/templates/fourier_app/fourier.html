@@ -21,6 +21,8 @@
         <button type="submit">Calcular</button>
     </form>
 
+    <button onclick="window.location.href='{% url 'image_processing' %}'">Ir a Procesamiento de Imágenes</button>
+
     {% if t_values and f_values %}
     <h2>Serie truncada con {{ N }} términos</h2>
     <canvas id="fourierChart"></canvas>

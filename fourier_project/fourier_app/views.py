@@ -3,7 +3,11 @@ from django.shortcuts import render
 # Create your views here.
 import numpy as np
 from .fourier import fourier_series_truncated
-
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+import cv2
+import os
 from scipy.integrate import quad
 
 # Lista de funciones permitidas
@@ -106,3 +110,30 @@ def generate_fourier_equation(a0, a_coeffs, b_coeffs):
         terms.append(f"{an:.2f} * cos({n} * ω * t)")
         terms.append(f"{bn:.2f} * sin({n} * ω * t)")
     return " + ".join(terms)
+
+def blur_detection(image_path):
+    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    laplacian_var = cv2.Laplacian(gray_image, cv2.CV_64F).var()
+    threshold = 100.0
+    is_blurry = laplacian_var < threshold
+    return laplacian_var, is_blurry
+
+def image_processing(request):
+    result = None
+    image_url = None
+    if request.method == 'POST' and request.FILES.get('image'):
+        image = request.FILES['image']
+        
+        # Guarda la imagen en 'uploaded_images/' dentro de MEDIA_ROOT
+        image_path = default_storage.save(os.path.join('uploaded_images', image.name), ContentFile(image.read()))
+        image_url = settings.MEDIA_URL + 'uploaded_images/' + image.name  # Genera la URL para el HTML
+
+        # Realizar la detección de desenfoque
+        laplacian_var, is_blurry = blur_detection(default_storage.path(image_path))
+        result = {
+            'laplacian_var': laplacian_var,
+            'is_blurry': is_blurry,
+        }
+        
+    return render(request, 'fourier_app/imagenes.html', {'result': result, 'image_url': image_url})
